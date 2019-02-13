@@ -57,7 +57,7 @@ Initial Google Dimensions and  Metrics and unsuccessful characteristic
 unsuccessful characteristic
 
 Source
-ExitPathPage page contains “contact” 
+ExitPathPage page contains “contact”
 SearchUsed “Visits With Site Search”
 PageDepth value > 3
 Date  Used to create Time series
