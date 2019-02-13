@@ -38,10 +38,11 @@ This model only applies to unauthenticated web browsing as google analytics does
 Identify suitable Google Analytics dimensions and metrics to be used in the test/train time series dataset
 Apply Google Analytics Dimensions and Metrics to Lostness factor equation: 
 
-L = Lostness
-N = The number of different screens visited during the task
-S = The total number of screens visited during the task
-R = the minimum number of screens that must be visited to complete the task
+|L| Lostness|
+|N| The number of different screens visited during the task|
+|S| The total number of screens visited during the task|
+|R| The minimum number of screens that must be visited to complete the task|
+
 Determine how we view Lostness within Google Analytics and download a small dataset to test train methodology
 We will create a data model using K-fold cross validation to support a multivariable regression:
 
@@ -54,18 +55,18 @@ Finally we will apply the model to the residual 600,000 observation in our DHS e
 Initial Google Dimensions and  Metrics and unsuccessful characteristic
 
 # Dimension & Metric 
-_unsuccessful characteristic_  
+**unsuccessful characteristic** 
 
-Source
-ExitPathPage    page contains “contact”
-SearchUsed      “Visits With Site Search”
-PageDepth       value > 3
-Date            Used to create Time series
-Hour            Used to create Time series
-Minute          Used to create Time series
-Users
-timeOnPage      value < 45 & or value > 121
-SearchDepth     value > 3
-SearchRefinement
-SearchDuration  value > 12
-SearchExits     value > 0
+|Source|   |
+|ExitPathPage|page contains “contact”|
+|SearchUsed|      “Visits With Site Search”|
+|PageDepth|       value > 3|
+|Date|            Used to create Time series|
+|Hour|            Used to create Time series|
+|Minute|          Used to create Time series|
+|Users| |
+|timeOnPage| value < 45 & or value > 121|
+|SearchDepth| value > 3|
+|SearchRefinement| |
+|SearchDuration| value > 12|
+|SearchExits| value > 0|
