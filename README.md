@@ -37,7 +37,7 @@ This model only applies to unauthenticated web browsing as google analytics does
 # Methodology
 Identify suitable Google Analytics dimensions and metrics to be used in the test/train time series dataset
 Apply Google Analytics Dimensions and Metrics to Lostness factor equation: 
-
+|---|---|
 |L| Lostness|
 |N| The number of different screens visited during the task|
 |S| The total number of screens visited during the task|
@@ -56,7 +56,7 @@ Initial Google Dimensions and  Metrics and unsuccessful characteristic
 
 # Dimension & Metric 
 **unsuccessful characteristic** 
-
+|---|---|
 |Source|   |
 |ExitPathPage|page contains “contact”|
 |SearchUsed|      “Visits With Site Search”|
