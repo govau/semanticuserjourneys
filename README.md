@@ -57,7 +57,8 @@ Finally we will apply the model to the residual 600,000 observation in our DHS e
 Initial Google Dimensions and  Metrics and unsuccessful characteristic
 
 # Dimension & Metric 
-**unsuccessful characteristic** 
+### unsuccessful characteristic
+
 |**metric or dimension**|**characteristic**|
 |---|---|
 |Source|   |
