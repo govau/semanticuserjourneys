@@ -54,18 +54,18 @@ Finally we will apply the model to the residual 600,000 observation in our DHS e
 Initial Google Dimensions and  Metrics and unsuccessful characteristic
 
 # Dimension & Metric 
-unsuccessful characteristic
+_unsuccessful characteristic_  
 
 Source
-ExitPathPage page contains “contact”
-SearchUsed “Visits With Site Search”
-PageDepth value > 3
-Date  Used to create Time series
-Hour  Used to create Time series
-Minute Used to create Time series
+ExitPathPage    page contains “contact”
+SearchUsed      “Visits With Site Search”
+PageDepth       value > 3
+Date            Used to create Time series
+Hour            Used to create Time series
+Minute          Used to create Time series
 Users
-timeOnPage value < 45 & or value > 121
-SearchDepth value > 3
+timeOnPage      value < 45 & or value > 121
+SearchDepth     value > 3
 SearchRefinement
-SearchDuration value > 12
-SearchExits value > 0
+SearchDuration  value > 12
+SearchExits     value > 0
