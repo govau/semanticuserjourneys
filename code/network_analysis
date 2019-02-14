@@ -1,0 +1,139 @@
+setwd("~/Documents/Wildebeest")
+
+library(googleAuthR)
+library(googleAnalyticsR)
+library(tidyverse)
+library(stringr)
+library(lubridate)
+library(zoo)
+library(xts)
+library(aws.s3)
+library(aws.signature)
+library(igraph)
+library(urltools)
+library(visNetwork)
+library(tidytext)
+library(scales)
+library(readxl)
+
+score.user = function(sentences, user.words, .progress='none')
+{
+  require(plyr);
+  require(stringr);
+  scores = laply(sentences, function(sentence, user.words) {
+    sentence = gsub('[^A-z ]','', sentence)
+    sentence = tolower(sentence);
+    word.list = str_split(sentence, '\\s+');
+    words = unlist(word.list);
+    user.matches = match(words, user.words);
+    scores = !is.na(user.matches);
+    return(scores);
+  }, user.words, .progress=.progress );
+  scores.df = data.frame(score=scores, text=sentences);
+  return(scores.df);
+}
+
+score.sentiment = function(sentences, pos.words, neg.words, .progress='none')
+{
+  require(plyr)
+  require(stringr)
+  
+  # we got a vector of sentences. plyr will handle a list or a vector as an "l" for us
+  # we want a simple array of scores back, so we use "l" + "a" + "ply" = laply:
+  scores = laply(sentences, function(sentence, pos.words, neg.words) {
+    
+    # clean up sentences with R's regex-driven global substitute, gsub():
+    sentence = gsub('[[:punct:]]', '', sentence)
+    sentence = gsub('[[:cntrl:]]', '', sentence)
+    sentence = gsub('\\d+', '', sentence)
+    # and convert to lower case:
+    sentence = tolower(sentence)
+    
+    # split into words. str_split is in the stringr package
+    word.list = str_split(sentence, '\\s+')
+    # sometimes a list() is one level of hierarchy too much
+    words = unlist(word.list)
+    
+    # compare our words to the dictionaries of positive & negative terms
+    pos.matches = match(words, pos.words)
+    neg.matches = match(words, neg.words)
+    
+    # match() returns the position of the matched term or NA
+    # we just want a TRUE/FALSE:
+    pos.matches = !is.na(pos.matches)
+    neg.matches = !is.na(neg.matches)
+    
+    # and conveniently enough, TRUE/FALSE will be treated as 1/0 by sum():
+    score = sum(pos.matches) - sum(neg.matches)
+    
+    return(score)
+  }, pos.words, neg.words, .progress=.progress )
+  
+  scores.df = data.frame(score=scores, text=sentences)
+  return(scores.df)
+}
+
+
+##GA Account authorisation
+options(googleAuthR.client_id = "102505174318-j9qfkj9268hu6nuvspl5md6a9h0rf3d0.apps.googleusercontent.com")
+options(googleAuthR.client_secret = "gohzu4T-8axfBy5e_wAlFpSO")
+options(googleAuthR.scopes.selected = "https://www.googleapis.com/auth/analytics.readonly")
+ga_auth()
+
+viewId <- read.csv("viewid.csv", stringsAsFactors = F)
+gagov_search <- data.frame(searchKeyword = character(),
+                          fullReferrer = character(),
+                          searchAfterDestinationPage = character(),
+                          previousPagePath = character(),
+                          exitPagePath = character(),
+                          users = numeric(),
+                          websiteUrl = character())
+
+for(i in 1:length(viewId$viewId)) {
+  dl <- google_analytics(viewId$viewId[i], 
+                         date_range = c("2018-11-01","2018-12-31"), 
+                         metrics = c("users"),
+                         dimensions = c("adMatchedQuery"),
+                         max = 750000)
+  dl$websiteUrl <- viewId$websiteUrl[i]
+  dl <- as.data.frame(dl)
+  gagov_search <- plyr::rbind.fill(gagov_search, dl)
+  Sys.sleep(15)
+}
+
+
+gagov_search <- na.omit(gagov_search)
+search.text <- gagov_search$searchKeyword
+user.words <- read.csv("vector.csv")
+stop.words <- c("shit", "fuck", "cunt")
+
+results <- score.sentiment(search.text, user.words$word, stop.words)
+gagov_search$results <- results$score
+gagov_igraph <- gagov_search %>%
+  filter(results >=4)
+
+ig1 <- gagov_igraph[, c(3:4)]
+ig2 <- gagov_igraph[, c(4:5)]
+colnames(ig1) <- c("from", "to")
+colnames(ig2) <- c("from", "to")
+ig1 <- rbind(ig1, ig2)
+
+ig_gagov <- graph_from_data_frame(ig1)
+ig_gagov <- simplify(ig_gagov, remove.multiple = T, remove.loops = T)
+
+plot(ig_gagov, vertex.label = NA, layout = layout_with_kk, vertex.size = 6, edge.arrow.size = .15)
+
+##visnetwork 
+vis.data <- toVisNetworkData(ig_gagov)
+net <- visNetwork(nodes = vis.data$nodes, edges = vis.data$edges, width = "100%", height = "2000px") %>%
+  visEdges(shadow = T,
+           arrows = list(to = list(enabled = TRUE, scaleFactor = .5)),
+           color = list(color = "lightblue", highllight = "red"),
+           scaling = "max") %>%
+  visNodes(color = list(background = "lightblue", 
+                        border = "darkblue",
+                        highlight = "yellow"),
+           shadow = list(enabled = TRUE, size = 10),
+           label = NULL) %>%
+  visOptions(highlightNearest = T, nodesIdSelection = F)
+visSave(net, "gagov_network.html")
