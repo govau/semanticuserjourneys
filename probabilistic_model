@@ -1,0 +1,129 @@
+library(googleAuthR)
+library(googleAnalyticsR)
+library(tidyverse)
+library(stringr)
+library(lubridate)
+library(zoo)
+library(xts)
+library(aws.s3)
+library(aws.signature)
+library(igraph)
+library(urltools)
+library(visNetwork)
+library(tidytext)
+library(scales)
+library(readxl)
+library(rpart)
+library(rpart.plot)
+library(class)
+library(pROC)
+
+##GA Account authorisation
+options(googleAuthR.scopes.selected = "https://www.googleapis.com/auth/analytics.readonly")
+ga_auth()
+
+viewId <- read.csv("viewid.csv", stringsAsFactors = F)
+gagov_search <- data.frame(source = character(),
+                          exitPagePath = character(),
+                          searchUsed = character(),
+                          pageDepth = numeric(),
+                          date = numeric(),
+                          hour = numeric(),
+                          minute = numeric(),
+                          users = numeric(),
+                          timeOnPage = numeric(),
+                          pageviews = numeric(),
+                          uniquePageviews = numeric(),
+                          searchDepth = numeric(),
+                          searchRefinements = numeric(),
+                          searchDuration = numeric(),
+                          searchExits = numeric(),
+                          websiteUrl = character())
+
+for(i in 97:length(viewId$viewId)) {
+  dl <- google_analytics(viewId$viewId[i], 
+                         date_range = c("2018-11-01","2018-11-08"), 
+                         metrics = c("users", "timeOnPage", "pageviews", "uniquePageviews", "searchDepth", "searchRefinements", "searchDuration","searchExits"),
+                         dimensions = c("source", "exitPagePath", "searchUsed","pageDepth","date", "hour", "minute"),
+                         max = 1000000)
+  dl$websiteUrl <- viewId$websiteUrl[i]
+  dl <- as.data.frame(dl)
+  gagov_search <- plyr::rbind.fill(gagov_search, dl)
+  Sys.sleep(15)
+}
+
+train <- sample_n(dl, 150000)
+
+category <- NULL
+t1 <- Sys.time()
+  for(i in 1:nrow(train)){
+      pdepth <- train$pageDepth[i]>4
+      sdepth <- train$searchDepth[i]>2
+      ptimepos <- train$timeOnPage[i]<45 
+      ptimeneg <- train$timeOnPage[i]>120 
+      sexits <- train$searchExits[i]>0
+      sduration <- train$searchDuration[i]>12
+      sused <- train$searchUsed[i]=="Visits With Site Search"
+      pexit <- grepl("contact", train$exitPagePath[i])
+      unsucc <- as.numeric(pdepth+sdepth+sexits+sduration+sused+pexit+ptimepos+ptimeneg)
+      unsuccessful <- ifelse(unsucc>=3, "unsuccessful","not unsuccessful")
+      category <- rbind(category, unsuccessful)
+  }
+t2 <- Sys.time()
+t2 - t1
+
+train$outcome <- category[,1]
+train$outcomeNum <- ifelse(train$outcome=="unsuccessful", 1,0)
+train$pexit <- grepl("contact", train$exitPagePath)
+
+train1 <- train[,-c(1,2)]
+train1$date <- as.numeric(train1$date)
+
+null_glm <- glm(outcomeNum ~ 1, data = train1, family = "binomial")
+max_glm <- glm(outcomeNum ~ ., data = train1, family = "binomial")
+step_model <- step(null_glm, scope = list(lower = null_glm, upper = max_glm), direction = "forward")
+step_prob <- predict(step_model, type = "response")
+ROC <- roc(train1$outcomeNum, step_prob)
+plot(ROC, col = "red")
+auc(ROC)
+
+gagov_search$searchUsedNum <- ifelse(gagov_search$searchUsed == "Visits Without Site Search", 0,1)
+gagov_search$pexit <- grepl("contact", gagov_search$exitPagePath)
+gagov_search$date <- as.Date(gagov_search$date)
+gagov_search$hour <- as.numeric(gagov_search$hour)
+gagov_search$pageDepth <- as.numeric(gagov_search$pageDepth)
+gagov_search <- na.omit(gagov_search)
+
+t1 <- Sys.time()
+gagov_predict <- predict(step_model, gagov_search)
+t2 <- Sys.time()
+t2 - t1
+
+gagov_search$predict <- ifelse(gagov_predict>.5, "not unsuccessful", "unsuccessful")
+gagov_search$predict <- gagov1_predict
+gagov_comb <- rbind(gagov1, gagov_search)
+
+hm <- paste(gagov_comb$hour, gagov_comb$minute, sep = ":")
+gagov_search$dhm <- as.POSIXct(paste(as.Date(gagov_comb$date), hm), format = "%Y-%m-%d %H:%M") 
+
+
+names.wb <- gagov_comb %>%
+group_by(websiteUrl) %>%
+summarise(total = n()) %>%
+filter(total > 75000) %>%
+select(websiteUrl)
+
+data2 <- gagov_comb %>%
+  select(websiteUrl, dhm, predict, users) 
+  group_by(websiteUrl, dhm, predict) %>%
+  ungroup()
+
+
+pdf("model_test.pdf", width = 16.53, height = 11.69)  
+data2 %>%
+filter(websiteUrl %in% names.wb$websiteUrl ) %>%
+ggplot(aes(x = dhm, y = users, col = predict)) +
+geom_point(alpha = .5)+
+ylab("Users")#+
+facet_wrap(~websiteUrl, scales = "free_y")
+dev.off()
