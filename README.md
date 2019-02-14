@@ -11,18 +11,16 @@ This use of language, rather than clicking on links, provides an opportunity to 
 
 Image 1. A network map of websites linked by referring domain.  Highlighted is Google and its links across the government’s digital domain.
 
-An automated way of identifying these terms is by applying Zpif’s law to documents associated with the life event. Zipf’s law states that there is a power law relationship between a term’s rank in a document is inversely proportional to its frequency (Chart 1).  Thus the word “the” may have the highest frequency but the lowest rank, whereas a name may have the lowest frequency but the highest rank, or value.  Applying Zipf’s law to a large number of documents associated with a life event should identify an associated group of key terms terms.  These words will then be used as a vector to rank a large collection of search queries.  Each word in the query compared to the vector and given a score of one.  This is then totaled across the search query to give it a score.  
-
-Chart 1. Term frequency - inverse document frequency analysis of carersgateway.gov.au webpages identifying words that may form the carers lexicon.
+An automated way of identifying these terms is by applying Zpif’s law to documents associated with the life event. Zipf’s law states that there is a power law relationship between a term’s rank in a document is inversely proportional to its frequency.  Thus the word “the” may have the highest frequency but the lowest rank, whereas a name may have the lowest frequency but the highest rank, or value.  Applying Zipf’s law to a large number of documents associated with a life event should identify an associated group of key terms terms.  These words will then be used as a vector to rank a large collection of search queries.  Each word in the query compared to the vector and given a score of one.  This is then totaled across the search query to give it a score.  
 
 Search queries are filtered based on a chosen score or ratio. The webpages users accessed after the search query and additional pages will be downloaded from Google Analytics.  A directed network will then be constructed based on this data for visualisation and further analysis. 
 
 # What does failure look like in Google Analytics?
-Hypotheses:
+### Hypotheses:
 Building upon Wildebeest phase one work, identifying user journey language and network maps we will:
-Develop a simple, binary classification model that will group user journeys through the .gov.au domain space into ‘unsuccessful’ and ‘not-unsuccessful’ clusters.
-Explore the use of multilevel logistic regression to create a model that identifies unsuccessful and undefined user journeys.
-Benefits
+* Develop a simple, binary classification model that will group user journeys through the .gov.au domain space into ‘unsuccessful’ and ‘not-unsuccessful’ clusters.
+* Explore the use of multilevel logistic regression to create a model that identifies unsuccessful and undefined user journeys.
+### Benefits
 Understanding the user breakpoints (failures) in the .gov.au domain space.
 Enhancing dashboard’s value to agencies and ministers through greater use of a consistent reporting.  
 Provide additional value to GA360 subscribers by reducing agency reporting burden. 
