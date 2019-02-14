@@ -1,0 +1,71 @@
+setwd("~/Documents/Wildebeest/Carers_output")
+
+library(googleAuthR)
+library(googleAnalyticsR)
+library(tidyverse)
+library(stringr)
+library(lubridate)
+library(zoo)
+library(xts)
+library(aws.s3)
+library(aws.signature)
+library(igraph)
+library(urltools)
+library(visNetwork)
+library(tidytext)
+library(scales)
+library(readxl)
+
+options(googleAuthR.scopes.selected = "https://www.googleapis.com/auth/analytics.readonly")
+ga_auth(new_user = T)
+
+temp <- list.files(pattern = '*.txt')
+for(i in 1:length(temp)) assign(temp[i], readLines(temp[i]))
+
+carers <- NULL
+addon <- data.frame(text = as.character(),
+                    document = as.character())
+for(i in 1:length(temp)) {
+  text <- as.data.frame(cbind(get(temp[i])))
+  document <- temp[i]
+  dl <- data.frame(text,document)
+  addon <- rbind(addon, dl)
+}
+
+colnames(addon) <- c("text", "document")
+
+addon_word <- addon %>%
+  unnest_tokens(word, text) %>%
+  count(document, word, sort = TRUE) %>%
+  ungroup()
+
+
+total_words <- addon_word %>%
+  group_by(document) %>%
+  summarise(total = sum(n))
+
+addon_word <- left_join(addon_word, total_words)
+
+freq_by_rank <- addon_word %>%
+  group_by(document) %>%
+  mutate(rank = row_number(),
+         'term frequency' = n/total)
+
+addon_word <- addon_word %>%
+  bind_tf_idf(word, document, n)
+
+addon_word %>%
+  select(-total) %>%
+  arrange(desc(tf_idf))
+
+setwd("~/Documents/Wildebeest")
+addon_word %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(document) %>% 
+  top_n(15) %>% 
+  ungroup %>%
+  distinct(word) %>%
+  filter(!grepl("\\d", as.character(word))) %>%
+  write.csv("vector.csv")
+
