@@ -1,4 +1,4 @@
-# User journey through semantic analysis informed probabilistic modelling
+# User journey mapping through semantic analysis informed probabilistic modelling
 
 Language is the primary method for users to interact with a website, especially during their early engagements.  Combining text analysis and site metrics, the Analytics team intend to quantitatively map how users interact with government services and information during various life events across the digital environment. Key terms associated with life events will be extracted from documents to form a lexicon*. An algorithm will use this lexicon to rank internal search queries, identifying users who may be undertaking that life event. The pages that users accessed after the query will be identified using Google Analytics and brought together to form a network of webpages that correlate to that life event.  The Analytics team will then apply network analytics methods to identify core nodes in that network for investigation.
 
