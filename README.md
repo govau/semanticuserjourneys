@@ -72,3 +72,23 @@ Initial Google Dimensions and  Metrics and unsuccessful characteristic
 |SearchRefinement| |
 |SearchDuration| value > 12|
 |SearchExits| value > 0|
+
+# Getting started
+
+The scripts require access to the Google analytics API and have been built in R version 3.5.1
+
+Library used:
+* googleAuthR
+* googleAnalyticsR
+* tidyverse
+* stringr
+* lubridate
+* igraph
+* visNetwork
+* tidytext
+* scales
+
+Download the scripts, insert your google analytics API keys and run in a R-capable IDE.
+
+
+
